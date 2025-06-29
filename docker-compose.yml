@@ -1,0 +1,53 @@
+version: "3"
+
+services:
+  backend:
+    build: ./backend
+    ports:
+      - 5010:5010
+    volumes:
+      - ./backend/package.json:/app/package.json:rw
+      - ./backend/.env:/app/.env:rw
+      - ./backend/src/:/app/src/:rw
+    environment:
+      - WATCHPACK_POLLING=true
+    depends_on:
+      - db
+
+  frontend:
+    build: ./frontend
+    command: npm run dev
+    ports:
+      - 3000:3000
+    volumes:
+      - ./frontend/pages/:/app/pages/:rw
+      - ./frontend/public/:/app/public/:rw
+      - ./frontend/server/:/app/server/:rw
+      - ./frontend/components/:/app/components/:rw
+      - ./frontend/types/:/app/types/:rw
+      - ./frontend/contexts/:/app/contexts/:rw
+      - ./frontend/__tests__/:/app/__tests__/:rw
+      - ./frontend/services/:/app/services/:rw
+      - ./frontend/app.vue:/app/app.vue:rw
+      - ./frontend/.env:/app/.env:rw
+      - ./frontend/package.json:/app/package.json:rw
+      - ./frontend/nuxt.config.ts:/app/nuxt.config.ts:rw
+
+  db:
+    image: postgres
+    restart: always
+    env_file: .env
+    volumes:
+      - ./dbData/:/var/lib/postgresql/data
+    ports:
+      - 5432:5432
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -d ${POSTGRES_DB} -U ${POSTGRES_USER}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  adminer:
+    image: adminer
+    ports:
+      - 8080:8080
